@@ -25,8 +25,8 @@ class FilmorateApplicationTests {
 			.registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe())
 			.create();
 	static HttpClient httpClient;
-	final static String url = "http://localhost:8080";
-	final static HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
+	final String url = "http://localhost:8080";
+	final HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
 	static URI uri;
 	HttpRequest request;
 	HttpResponse<String> response;
