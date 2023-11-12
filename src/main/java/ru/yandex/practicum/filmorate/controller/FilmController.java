@@ -1,95 +1,94 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NoFilmException;
-import ru.yandex.practicum.filmorate.exception.UserAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.utility.LocalDateAdapter;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
 public class FilmController {
+    private static final int MAX_NAME_SIZE = 200;
+    private static final LocalDate FILM_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
     private final Map<Integer, Film> films = new HashMap<>();
-    private static int idCounter = 1;
-    private static final Gson gson = new GsonBuilder()
-            .registerTypeAdapter(LocalDate.class, new LocalDateAdapter().nullSafe())
-            .create();
+    private int idCounter = 1;
 
     @GetMapping
-    public String findAll() {
-        return gson.toJson(films.values());
+    public List<Film> getAll() {
+        log.info("Пришел запрос GET /films");
+        final List<Film> filmsList = new ArrayList<>(films.values());
+        log.info("Отправлен ответ GET /films {}", filmsList);
+        return filmsList;
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        System.out.println("film = " + film);
-        String message = filmValidation(film);
-        if (!message.isEmpty()) {
-            log.debug("Создание: не прошел валидацию: " + message);
-            throw new ValidationException(message);
-        }
+        log.info("Пришел запрос POST /films");
+
         if (films.containsKey(film.getId())) {
-            log.debug("Создание: повтор фильма");
-            throw new UserAlreadyExistException("Такой фильм уже существует");
+            ValidationException e = new ValidationException("Такой фильм уже существует");
+            log.debug("Запрос завершен ошибкой: " + e.getMessage());
+            throw e;
         }
+
+        try {
+            filmValidation(film);
+        } catch (ValidationException e) {
+            log.info("Не прошел валидацию с ошибкой: " + e.getMessage());
+            throw e;
+        }
+
         final int id = idCounter++;
         film.setId(id);
         films.put(id, film);
-        log.info("Создание: добавлен фильм с id: " + id);
+        log.info("Отправлен ответ POST /films {}", films.get(id));
         return films.get(id);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        String message = filmValidation(film);
-        if (!message.isEmpty()) {
-            log.debug("Обновление: не прошел валидацию: " + message);
-            throw new ValidationException(message);
-        }
-        int id = film.getId();
+        log.info("Пришел запрос PUT /films");
+
+        final int id = film.getId();
         if (!films.containsKey(id)) {
-            log.debug("Обновление: фильм отсутствует");
-            throw new NoFilmException("такого фильма не существует");
+            ValidationException e = new ValidationException("Фильм не найден");
+            log.debug("Запрос завершен ошибкой: " + e.getMessage());
+            throw e;
         }
+
+        try {
+            filmValidation(film);
+        } catch (ValidationException e) {
+            log.info("Не прошел валидацию с ошибкой: " + e.getMessage());
+            throw e;
+        }
+
         films.put(id, film);
-        log.info("Обновление: обновлен фильм с id: " + id);
+        log.info("Отправлен ответ PUT /films {}", films.get(id));
         return films.get(id);
     }
 
-    private String filmValidation(Film film) {
-        StringBuilder stringBuilder = new StringBuilder();
+    private void filmValidation(Film film) {
         if (film.getName().isBlank()) {
-            stringBuilder.append("нет названия");
+            throw new ValidationException("нет названия фильма");
         }
-        if (film.getDescription().length() > 200) {
-            if (stringBuilder.length() != 0) {
-                stringBuilder.append(" & ");
-            }
-            stringBuilder.append("длина описания более 200 символов");
+        if (film.getDescription().length() > MAX_NAME_SIZE) {
+            throw new ValidationException("длина описания более " + MAX_NAME_SIZE + " символов");
         }
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
-            if (stringBuilder.length() != 0) {
-                stringBuilder.append(" & ");
-            }
-            stringBuilder.append("слишком ранняя дата релиза");
+        if (film.getReleaseDate().isBefore(FILM_BIRTHDAY)) {
+            throw new ValidationException("слишком ранняя дата релиза");
         }
-        if (film.getDuration() < 0) {
-            if (stringBuilder.length() != 0) {
-                stringBuilder.append(" & ");
-            }
-            stringBuilder.append("отрицательная продолжительность");
+        if (film.getDuration() <= 0) {
+            throw new ValidationException("отрицательная продолжительность");
         }
-        return stringBuilder.toString();
     }
 }

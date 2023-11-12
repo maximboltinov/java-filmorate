@@ -158,7 +158,7 @@ class FilmorateApplicationTests {
 		request = HttpRequest.newBuilder().uri(uri).headers("Content-Type", "application/json")
 				.POST(HttpRequest.BodyPublishers.ofString(gson.toJson(film))).build();
 		response = httpClient.send(request, handler);
-		assertEquals(200, response.statusCode());
+		assertEquals(500, response.statusCode());
 	}
 
 	@Test
