@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/films")
 @Slf4j
-public class FilmController extends Controller<Film > {
+public class FilmController extends Controller<Film> {
     private static final int MAX_NAME_SIZE = 200;
     private static final LocalDate FILM_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
 
