@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class Film {
+public class Film implements Entity {
     private int id;
     @NotBlank
     private String name;

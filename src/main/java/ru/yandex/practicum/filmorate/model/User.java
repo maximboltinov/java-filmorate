@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class User {
+public class User implements Entity {
     private int id;
     @Email
     @NonNull

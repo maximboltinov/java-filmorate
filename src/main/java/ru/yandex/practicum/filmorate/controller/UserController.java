@@ -7,38 +7,34 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
 @Slf4j
-public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int idCounter = 1;
-
+public class UserController extends Controller<User> {
+    @Override
     @GetMapping
     public List<User> getAll() {
         log.info("Пришел запрос GET /users");
-        final List<User> usersList = new ArrayList<>(users.values());
+        final List<User> usersList = super.getAll();
         log.info("Отправлен ответ GET /users {}", usersList);
         return usersList;
     }
 
+    @Override
     @PostMapping
     public User create(@Valid @RequestBody User user) {
         log.info("Пришел запрос POST /users");
 
-        if (users.containsKey(user.getId())) {
+        if (storage.containsKey(user.getId())) {
             ValidationException e = new ValidationException("Такой пользователь уже существует");
             log.debug("Запрос завершен ошибкой: " + e.getMessage());
             throw e;
         }
 
         try {
-            userValidation(user);
+            validation(user);
         } catch (ValidationException e) {
             log.info("Не прошел валидацию с ошибкой: " + e.getMessage());
             throw e;
@@ -49,26 +45,24 @@ public class UserController {
             log.info("Пользователь без имени, имя = логин");
         }
 
-        final int id = idCounter++;
-        user.setId(id);
-        users.put(id, user);
-        log.info("Отправлен ответ POST /users {}", users.get(id));
-        return users.get(id);
+        final User userResponse = super.create(user);
+        log.info("Отправлен ответ POST /users {}", userResponse);
+        return userResponse;
     }
 
+    @Override
     @PutMapping
     public User update(@Valid @RequestBody User user) {
         log.info("Пришел запрос PUT /users");
 
-        final int id = user.getId();
-        if (!users.containsKey(id)) {
+        if (!storage.containsKey(user.getId())) {
             ValidationException e = new ValidationException("Пользователь не найден");
             log.debug("Запрос завершен ошибкой: " + e.getMessage());
             throw e;
         }
 
         try {
-            userValidation(user);
+            validation(user);
         } catch (ValidationException e) {
             log.info("Не прошел валидацию с ошибкой: " + e.getMessage());
             throw e;
@@ -79,12 +73,13 @@ public class UserController {
             log.info("Пользователь без имени, имя = логин");
         }
 
-        users.put(id, user);
-        log.info("Отправлен ответ PUT /users {}", users.get(id));
-        return users.get(id);
+        final User userResponse = super.update(user);
+        log.info("Отправлен ответ PUT /users {}", userResponse);
+        return userResponse;
     }
 
-    private void userValidation(User user) {
+    @Override
+    protected void validation(User user) {
         if (user.getEmail().isBlank() || !user.getEmail().contains("@")) {
             throw new ValidationException("Некорректный email");
         }
