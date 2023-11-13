@@ -28,5 +28,5 @@ public abstract class Controller<T extends Entity> {
         return storage.get(id);
     }
 
-    abstract protected void validation(T entity);
+    abstract void validation(T entity);
 }
