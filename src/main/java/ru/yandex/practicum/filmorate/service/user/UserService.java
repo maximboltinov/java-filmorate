@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.utility.IdGenerator;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -55,7 +56,9 @@ public class UserService {
     }
 
     public List<User> getAllFriends(Long userId) {
-        return userStorage.getEntitiesBySet(userStorage.getEntityById(userId).getFriends());
+        List<User> list = userStorage.getEntitiesBySet(userStorage.getEntityById(userId).getFriends());
+        list.sort(Comparator.comparing(User::getId));
+        return list;
     }
 
     public List<User> getMutualFriends(Long user1Id, Long user2Id) {

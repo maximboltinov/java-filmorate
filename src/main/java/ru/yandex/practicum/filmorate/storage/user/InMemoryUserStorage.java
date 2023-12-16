@@ -47,7 +47,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public List<User> getAllEntities() {
         List<User> list = new ArrayList<>(storage.values());
-        list.sort(comparing(User::getId));
+        list.sort(Comparator.comparing(User::getId));
         return list;
     }
 }
