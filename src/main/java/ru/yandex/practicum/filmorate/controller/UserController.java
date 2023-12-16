@@ -33,13 +33,7 @@ public class UserController {
     @PostMapping
     public User create(@Valid @RequestBody User user) {
         log.info("Пришел запрос POST /users");
-
-        try {
-            validation(user);
-        } catch (ValidationException e) {
-            log.info("Не прошел валидацию с ошибкой: " + e.getMessage());
-            throw e;
-        }
+        validation(user);
 
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
@@ -54,13 +48,7 @@ public class UserController {
     @PutMapping
     public User update(@Valid @RequestBody User user) {
         log.info("Пришел запрос PUT /users");
-
-        try {
-            validation(user);
-        } catch (ValidationException e) {
-            log.info("Не прошел валидацию с ошибкой: " + e.getMessage());
-            throw e;
-        }
+        validation(user);
 
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
@@ -74,27 +62,40 @@ public class UserController {
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Long id) {
+        log.info("Пришел запрос GET /users/{}", id);
+        final User user = userService.getUserById(id);
+        log.info("Отправлен ответ GET /users/{} {}", id, user);
         return userService.getUserById(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addToFriends(@PathVariable Long id, @PathVariable Long friendId) {
+        log.info("Пришел запрос GET /users/{}/friends/{}", id, friendId);
         userService.addToFriends(id, friendId);
+        log.info("Отправлен ответ GET /users/{}/friends/{}", id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFromFriends(@PathVariable Long id, @PathVariable Long friendId) {
+        log.info("Пришел запрос DELETE /users/{}/friends/{}", id, friendId);
         userService.removeFromFriends(id, friendId);
+        log.info("Отправлен ответ DELETE /users/{}/friends/{}", id, friendId);
     }
 
     @GetMapping("/{id}/friends")
     public List<User> getAllFriends(@PathVariable Long id) {
-        return userService.getAllFriends(id);
+        log.info("Пришел запрос DELETE /users/{}/friends", id);
+        List<User> userList = userService.getAllFriends(id);
+        log.info("Отправлен ответ DELETE /users/{}/friends {}", id, userList);
+        return userList;
     }
 
-    @GetMapping("{id}/friends/common/{otherId}")
+    @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getMutualFriends(@PathVariable Long id, @PathVariable Long otherId) {
-        return userService.getMutualFriends(id, otherId);
+        log.info("Пришел запрос GET /users/{}/friends/common/{}", id, otherId);
+        List<User> userList = userService.getMutualFriends(id, otherId);
+        log.info("Отправлен ответ GET /users/{}/friends/common/{} {}", id, otherId, userList);
+        return userList;
     }
 
     protected void validation(User user) {

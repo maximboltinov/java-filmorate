@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service.film;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 public class FilmService {
     private final FilmStorage filmStorage;
@@ -87,9 +85,7 @@ public class FilmService {
             throw new FilmAlreadyExistsException(String.format("Фильм с id = %s уже существует", film.getId()));
         }
 
-        Long id = idGenerator.generateId();
-        log.info(String.format("создан фильм с id %s", id));
-        film.setId(id);
+        film.setId(idGenerator.generateId());
         return filmStorage.addEntity(film);
     }
 

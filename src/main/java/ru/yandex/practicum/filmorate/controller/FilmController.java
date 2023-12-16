@@ -37,14 +37,7 @@ public class FilmController {
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Пришел запрос POST /films");
-
-        try {
-            validation(film);
-        } catch (ValidationException e) {
-            log.info("Не прошел валидацию с ошибкой: " + e.getMessage());
-            throw e;
-        }
-
+        validation(film);
         final Film filmResponse = filmService.create(film);
         log.info("Отправлен ответ POST /films {}", filmResponse);
         return filmResponse;
@@ -53,14 +46,7 @@ public class FilmController {
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
         log.info("Пришел запрос PUT /films");
-
-        try {
-            validation(film);
-        } catch (ValidationException e) {
-            log.info("Не прошел валидацию с ошибкой: " + e.getMessage());
-            throw e;
-        }
-
+        validation(film);
         final Film filmResponse = filmService.update(film);
         log.info("Отправлен ответ PUT /films {}", filmResponse);
         return filmResponse;
@@ -68,22 +54,32 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void likeIt(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("Пришел запрос PUT /films/{}/like/{}", id, userId);
         filmService.likeIt(userId, id);
+        log.info("Отправлен ответ PUT /films/{}/like/{}", id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        log.info("Пришел запрос DELETE /films/{}/like/{}", id, userId);
         filmService.removeLikeIt(userId, id);
+        log.info("Отправлен ответ DELETE /films/{}/like/{}", id, userId);
     }
 
     @GetMapping("/popular")
     public List<Film> getFilms(@RequestParam(defaultValue = "10") int count) {
-        return filmService.getPopularFilms(count);
+        log.info("Пришел запрос GET /films/popular");
+        final List<Film> list = filmService.getPopularFilms(count);
+        log.info("Отправлен ответ GET /films/popular {}", list);
+        return list;
     }
 
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable Long id) {
-        return filmService.getFilmById(id);
+        log.info("Пришел запрос GET /films/{}", id);
+        final Film film = filmService.getFilmById(id);
+        log.info("Отправлен ответ GET /films/{} {}", id, film);
+        return film;
     }
 
     protected void validation(Film film) {

@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.service.user;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 public class UserService {
     private final UserStorage userStorage;
@@ -100,9 +98,7 @@ public class UserService {
             throw new UserAlreadyExistsException(String.format("Пользователь с id = %s уже существует", user.getId()));
         }
 
-        Long id = idGenerator.generateId();
-        log.info(String.format("создан пользователь с id %s", id));
-        user.setId(id);
+        user.setId(idGenerator.generateId());
         return userStorage.addEntity(user);
     }
 
