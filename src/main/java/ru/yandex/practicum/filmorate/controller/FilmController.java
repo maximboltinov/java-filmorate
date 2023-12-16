@@ -1,9 +1,11 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.film.FilmService;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -13,30 +15,29 @@ import java.util.List;
 @RestController
 @RequestMapping("/films")
 @Slf4j
-public class FilmController extends Controller<Film> {
+public class FilmController {
     private static final int MAX_NAME_SIZE = 200;
     private static final LocalDate FILM_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
 
-    @Override
+    private final FilmService filmService;
+
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
+
     @GetMapping
     public List<Film> getAll() {
         log.info("Пришел запрос GET /films");
-        final List<Film> filmsList = super.getAll();
+        final List<Film> filmsList = filmService.getAll();
         log.info("Отправлен ответ GET /films {}", filmsList);
         return filmsList;
     }
 
-    @Override
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Пришел запрос POST /films");
 
-        if (storage.containsKey(film.getId())) {
-            ValidationException e = new ValidationException("Такой фильм уже существует");
-            log.debug("Запрос завершен ошибкой: " + e.getMessage());
-            throw e;
-        }
-
         try {
             validation(film);
         } catch (ValidationException e) {
@@ -44,22 +45,14 @@ public class FilmController extends Controller<Film> {
             throw e;
         }
 
-        final Film filmResponse = super.create(film);
+        final Film filmResponse = filmService.create(film);
         log.info("Отправлен ответ POST /films {}", filmResponse);
         return filmResponse;
     }
 
-    @Override
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
         log.info("Пришел запрос PUT /films");
-
-        final int id = film.getId();
-        if (!storage.containsKey(id)) {
-            ValidationException e = new ValidationException("Фильм не найден");
-            log.debug("Запрос завершен ошибкой: " + e.getMessage());
-            throw e;
-        }
 
         try {
             validation(film);
@@ -68,12 +61,31 @@ public class FilmController extends Controller<Film> {
             throw e;
         }
 
-        final Film filmResponse = super.update(film);
+        final Film filmResponse = filmService.update(film);
         log.info("Отправлен ответ PUT /films {}", filmResponse);
         return filmResponse;
     }
 
-    @Override
+    @PutMapping("/{id}/like/{userId}")
+    public void likeIt(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.likeIt(userId, id);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.removeLikeIt(userId, id);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getFilms(@RequestParam(defaultValue = "10") int count) {
+        return filmService.getPopularFilms(count);
+    }
+
+    @GetMapping("/films/{id}")
+    public Film getFilmById(@PathVariable Long id) {
+        return filmService.getFilmById(id);
+    }
+
     protected void validation(Film film) {
         if (film.getName().isBlank()) {
             throw new ValidationException("нет названия фильма");
