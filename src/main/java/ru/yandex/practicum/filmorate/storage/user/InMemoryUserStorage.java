@@ -6,6 +6,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Comparator.*;
+
 @Component
 public class InMemoryUserStorage implements UserStorage {
 
@@ -44,6 +46,8 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getAllEntities() {
-        return new ArrayList<>(storage.values());
+        List<User> list = new ArrayList<>(storage.values());
+        list.sort(comparing(User::getId));
+        return list;
     }
 }
