@@ -10,11 +10,18 @@ import java.util.Map;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
-
+    private Long counter = 1L;
     protected final Map<Long, Film> storage = new HashMap<>();
 
     @Override
     public Film addEntity(Film film) {
+        film.setId(generateId());
+        storage.put(film.getId(), film);
+        return film;
+    }
+
+    @Override
+    public Film updateEntity(Film film) {
         storage.put(film.getId(), film);
         return film;
     }
@@ -34,8 +41,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return new ArrayList<>(storage.values());
     }
 
-    @Override
-    public boolean isEntityRegistered(Long id) {
-        return storage.containsKey(id);
+    private Long generateId() {
+        return counter++;
     }
 }

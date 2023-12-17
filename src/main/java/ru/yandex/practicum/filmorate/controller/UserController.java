@@ -3,12 +3,10 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -33,13 +31,6 @@ public class UserController {
     @PostMapping
     public User create(@Valid @RequestBody User user) {
         log.info("Пришел запрос POST /users");
-        validation(user);
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-            log.info("Пользователь без имени, имя = логин");
-        }
-
         final User userResponse = userService.create(user);
         log.info("Отправлен ответ POST /users {}", userResponse);
         return userResponse;
@@ -48,13 +39,6 @@ public class UserController {
     @PutMapping
     public User update(@Valid @RequestBody User user) {
         log.info("Пришел запрос PUT /users");
-        validation(user);
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-            log.info("Пользователь без имени, имя = логин");
-        }
-
         final User userResponse = userService.update(user);
         log.info("Отправлен ответ PUT /users {}", userResponse);
         return userResponse;
@@ -96,17 +80,5 @@ public class UserController {
         List<User> userList = userService.getMutualFriends(id, otherId);
         log.info("Отправлен ответ GET /users/{}/friends/common/{} {}", id, otherId, userList);
         return userList;
-    }
-
-    protected void validation(User user) {
-        if (user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            throw new ValidationException("Некорректный email");
-        }
-        if (user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Некорректный логин");
-        }
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Некорректная дата рождения");
-        }
     }
 }

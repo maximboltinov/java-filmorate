@@ -1,32 +1,29 @@
 package ru.yandex.practicum.filmorate.service.user;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserAlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import ru.yandex.practicum.filmorate.utility.IdGenerator;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class UserService {
     private final UserStorage userStorage;
 
-    private final IdGenerator idGenerator;
-
     @Autowired
-    public UserService(UserStorage userStorage,
-                       @Qualifier("idGeneratorForUsers") IdGenerator idGenerator) {
+    public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
-        this.idGenerator = idGenerator;
     }
 
     public void addToFriends(Long user1Id, Long user2Id) {
@@ -94,22 +91,44 @@ public class UserService {
     }
 
     public User create(User user) {
-        if (userStorage.isEntityRegistered(user.getId())) {
+        if (userStorage.getEntityById(user.getId()) != null) {
             throw new UserAlreadyExistsException(String.format("Пользователь с id = %s уже существует", user.getId()));
         }
 
-        user.setId(idGenerator.generateId());
+        validation(user);
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+            log.info("Пользователь без имени, имя = логин");
+        }
+
         return userStorage.addEntity(user);
     }
 
     public User update(User user) {
-        if (!userStorage.isEntityRegistered(user.getId())) {
+        if (userStorage.getEntityById(user.getId()) == null) {
             throw new UserNotFoundException(String.format("Не найден пользователь с id = %s", user.getId()));
         }
-        return userStorage.addEntity(user);
+
+        validation(user);
+
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+            log.info("Пользователь без имени, имя = логин");
+        }
+
+        return userStorage.updateEntity(user);
     }
 
-    public boolean isUserRegistered(Long id) {
-        return userStorage.isEntityRegistered(id);
+    protected void validation(User user) {
+        if (user.getEmail().isBlank() || !user.getEmail().contains("@")) {
+            throw new ValidationException("Некорректный email");
+        }
+        if (user.getLogin().isBlank() || user.getLogin().contains(" ")) {
+            throw new ValidationException("Некорректный логин");
+        }
+        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException("Некорректная дата рождения");
+        }
     }
 }

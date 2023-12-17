@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -12,7 +13,7 @@ import java.util.Set;
 
 @Data
 @Builder
-public class User implements Entity {
+public class User {
     private Long id;
     @Email
     @NonNull
@@ -21,6 +22,7 @@ public class User implements Entity {
     private String login;
     private String name;
     private LocalDate birthday;
+    @JsonIgnore
     private final Set<Long> friends = new HashSet<>();
 
     public void addFriend(Long friendId) {

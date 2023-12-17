@@ -6,15 +6,20 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Comparator.*;
-
 @Component
 public class InMemoryUserStorage implements UserStorage {
-
+    private Long counter = 1L;
     protected final Map<Long, User> storage = new HashMap<>();
 
     @Override
     public User addEntity(User user) {
+        user.setId(generateId());
+        storage.put(user.getId(), user);
+        return user;
+    }
+
+    @Override
+    public User updateEntity(User user) {
         storage.put(user.getId(), user);
         return user;
     }
@@ -40,14 +45,13 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public boolean isEntityRegistered(Long id) {
-        return storage.containsKey(id);
-    }
-
-    @Override
     public List<User> getAllEntities() {
         List<User> list = new ArrayList<>(storage.values());
         list.sort(Comparator.comparing(User::getId));
         return list;
+    }
+
+    private Long generateId() {
+        return counter++;
     }
 }

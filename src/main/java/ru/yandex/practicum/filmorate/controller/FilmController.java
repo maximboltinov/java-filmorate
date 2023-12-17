@@ -3,22 +3,16 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
-import java.time.Month;
 import java.util.List;
 
 @RestController
 @RequestMapping("/films")
 @Slf4j
 public class FilmController {
-    private static final int MAX_NAME_SIZE = 200;
-    private static final LocalDate FILM_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
-
     private final FilmService filmService;
 
     @Autowired
@@ -37,7 +31,6 @@ public class FilmController {
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Пришел запрос POST /films");
-        validation(film);
         final Film filmResponse = filmService.create(film);
         log.info("Отправлен ответ POST /films {}", filmResponse);
         return filmResponse;
@@ -46,7 +39,6 @@ public class FilmController {
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
         log.info("Пришел запрос PUT /films");
-        validation(film);
         final Film filmResponse = filmService.update(film);
         log.info("Отправлен ответ PUT /films {}", filmResponse);
         return filmResponse;
@@ -80,20 +72,5 @@ public class FilmController {
         final Film film = filmService.getFilmById(id);
         log.info("Отправлен ответ GET /films/{} {}", id, film);
         return film;
-    }
-
-    protected void validation(Film film) {
-        if (film.getName().isBlank()) {
-            throw new ValidationException("нет названия фильма");
-        }
-        if (film.getDescription().length() > MAX_NAME_SIZE) {
-            throw new ValidationException("длина описания более " + MAX_NAME_SIZE + " символов");
-        }
-        if (film.getReleaseDate().isBefore(FILM_BIRTHDAY)) {
-            throw new ValidationException("слишком ранняя дата релиза");
-        }
-        if (film.getDuration() <= 0) {
-            throw new ValidationException("отрицательная продолжительность");
-        }
     }
 }

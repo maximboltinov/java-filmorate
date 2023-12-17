@@ -7,11 +7,11 @@ import java.util.List;
 public interface FilmStorage {
     Film addEntity(Film film);
 
+    Film updateEntity(Film film);
+
     Film getEntityById(Long id);
 
     void deleteEntityById(Long id);
 
     List<Film> getAllEntities();
-
-    boolean isEntityRegistered(Long id);
 }

@@ -1,64 +1,63 @@
 package ru.yandex.practicum.filmorate.service.film;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmAlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import ru.yandex.practicum.filmorate.utility.IdGenerator;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
+    private static final int MAX_NAME_SIZE = 200;
+    private static final LocalDate FILM_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
-    private final IdGenerator idGenerator;
-
     @Autowired
     public FilmService(FilmStorage filmStorage,
-                       UserStorage userStorage,
-                       @Qualifier("idGeneratorForFilms") IdGenerator idGenerator) {
+                       UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
-        this.idGenerator = idGenerator;
     }
 
     public void likeIt(Long userId, Long filmId) {
 
-        if (!userStorage.isEntityRegistered(userId)) {
+        if (userStorage.getEntityById(userId) == null) {
             throw new UserNotFoundException(String.format("Не найден пользователь с id = %s", userId));
         }
 
-        if (filmStorage.getEntityById(filmId) == null) {
+        Film film = filmStorage.getEntityById(filmId);
+        if (film == null) {
             throw new FilmNotFoundException(String.format("Не найден фильм с id = %s", filmId));
         }
 
-        Film film = filmStorage.getEntityById(filmId);
         film.addLike(userId);
-        filmStorage.addEntity(film);
+        filmStorage.updateEntity(film);
     }
 
     public void removeLikeIt(Long userId, Long filmId) {
 
-        if (!userStorage.isEntityRegistered(userId)) {
+        if (userStorage.getEntityById(userId) == null) {
             throw new UserNotFoundException(String.format("Не найден пользователь с id = %s", userId));
         }
 
-        if (filmStorage.getEntityById(filmId) == null) {
+        Film film = filmStorage.getEntityById(filmId);
+        if (film == null) {
             throw new FilmNotFoundException(String.format("Не найден фильм с id = %s", filmId));
         }
 
-        Film film = filmStorage.getEntityById(filmId);
         film.removeLike(userId);
-        filmStorage.addEntity(film);
+        filmStorage.updateEntity(film);
     }
 
     public List<Film> getPopularFilms(int count) {
@@ -81,11 +80,10 @@ public class FilmService {
     }
 
     public Film create(Film film) {
-        if (filmStorage.isEntityRegistered(film.getId())) {
+        if (filmStorage.getEntityById(film.getId()) != null) {
             throw new FilmAlreadyExistsException(String.format("Фильм с id = %s уже существует", film.getId()));
         }
-
-        film.setId(idGenerator.generateId());
+        validation(film);
         return filmStorage.addEntity(film);
     }
 
@@ -93,11 +91,22 @@ public class FilmService {
         if (filmStorage.getEntityById(film.getId()) == null) {
             throw new FilmNotFoundException(String.format("Не найден фильм с id = %s", film.getId()));
         }
-
-        return filmStorage.addEntity(film);
+        validation(film);
+        return filmStorage.updateEntity(film);
     }
 
-    public boolean isFilmRegistered(Long id) {
-        return filmStorage.isEntityRegistered(id);
+    protected void validation(Film film) {
+        if (film.getName().isBlank()) {
+            throw new ValidationException("нет названия фильма");
+        }
+        if (film.getDescription().length() > MAX_NAME_SIZE) {
+            throw new ValidationException("длина описания более " + MAX_NAME_SIZE + " символов");
+        }
+        if (film.getReleaseDate().isBefore(FILM_BIRTHDAY)) {
+            throw new ValidationException("слишком ранняя дата релиза");
+        }
+        if (film.getDuration() <= 0) {
+            throw new ValidationException("отрицательная продолжительность");
+        }
     }
 }
