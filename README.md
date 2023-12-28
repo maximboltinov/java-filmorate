@@ -29,14 +29,6 @@ SELECT *
 FROM users
 WHERE user_id = 1;
 ```
-* Получить список друзей для пользователя
-```postgresql
-SELECT *
-FROM films
-WHERE film_id IN (SELECT film_id
-                  FROM user_film_like
-                  WHERE user_id = 1);
-```
 * Получить список общих друзей
 ```posgresql
 SELECT *
