@@ -17,4 +17,12 @@ public interface UserStorage {
     List<User> getAllEntities();
 
     List<User> getEntitiesBySet(Set<Long> usersIds);
+
+    void addFriend(Long userId, Long friendId);
+
+    public List<User> getAllFriends(Long userId);
+
+    public List<User> getMutualFriends(Long user1Id, Long user2Id);
+
+    public void removeFromFriends(Long user1Id, Long user2Id);
 }

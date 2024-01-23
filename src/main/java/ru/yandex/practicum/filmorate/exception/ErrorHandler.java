@@ -39,6 +39,27 @@ public class ErrorHandler {
         return Map.of("пользователь", e.getMessage());
     }
 
+    @ExceptionHandler(LikeNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleLikeNotFound(final LikeNotFoundException e) {
+        log.info("Завершен с ошибкой: " + e.getMessage());
+        return Map.of("лайк", e.getMessage());
+    }
+
+    @ExceptionHandler(RatingMpaNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleMpaNotFound(final RatingMpaNotFoundException e) {
+        log.info("Завершен с ошибкой: " + e.getMessage());
+        return Map.of("рейтинг", e.getMessage());
+    }
+
+    @ExceptionHandler(GenreNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleGenreNotFound(final GenreNotFoundException e) {
+        log.info("Завершен с ошибкой: " + e.getMessage());
+        return Map.of("жанр", e.getMessage());
+    }
+
     @ExceptionHandler(UserAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleUserAlreadyExists(final UserAlreadyExistsException e) {

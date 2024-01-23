@@ -20,14 +20,6 @@ public class FilmController {
         this.filmService = filmService;
     }
 
-    @GetMapping
-    public List<Film> getAll() {
-        log.info("Пришел запрос GET /films");
-        final List<Film> filmsList = filmService.getAll();
-        log.info("Отправлен ответ GET /films {}", filmsList);
-        return filmsList;
-    }
-
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Пришел запрос POST /films");
@@ -42,6 +34,22 @@ public class FilmController {
         final Film filmResponse = filmService.update(film);
         log.info("Отправлен ответ PUT /films {}", filmResponse);
         return filmResponse;
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilmById(@PathVariable Long id) {
+        log.info("Пришел запрос GET /films/{}", id);
+        final Film film = filmService.getFilmById(id);
+        log.info("Отправлен ответ GET /films/{} {}", id, film);
+        return film;
+    }
+
+    @GetMapping
+    public List<Film> getAll() {
+        log.info("Пришел запрос GET /films");
+        final List<Film> filmsList = filmService.getAll();
+        log.info("Отправлен ответ GET /films {}", filmsList);
+        return filmsList;
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -64,13 +72,5 @@ public class FilmController {
         final List<Film> list = filmService.getPopularFilms(count);
         log.info("Отправлен ответ GET /films/popular {}", list);
         return list;
-    }
-
-    @GetMapping("/{id}")
-    public Film getFilmById(@PathVariable Long id) {
-        log.info("Пришел запрос GET /films/{}", id);
-        final Film film = filmService.getFilmById(id);
-        log.info("Отправлен ответ GET /films/{} {}", id, film);
-        return film;
     }
 }
