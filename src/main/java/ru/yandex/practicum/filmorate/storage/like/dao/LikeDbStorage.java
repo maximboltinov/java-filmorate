@@ -16,8 +16,8 @@ public class LikeDbStorage {
                 userId, filmId);
     }
 
-    public int removeLikeFromUser(Long filmId, Long user_id) {
+    public int removeLikeFromUser(Long filmId, Long userId) {
         return jdbcTemplate.update("DELETE FROM USER_FILM_LIKE WHERE USER_ID = ? AND FILM_ID = ?",
-                user_id, filmId);
+                userId, filmId);
     }
 }
