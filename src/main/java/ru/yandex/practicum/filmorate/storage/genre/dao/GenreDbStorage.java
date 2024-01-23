@@ -44,7 +44,7 @@ public class GenreDbStorage {
                 this::mapToFilmGenre);
 
         Map<Long, List<Genre>> result = new HashMap<>();
-        filmsGenresFetch.forEach(element -> result.computeIfAbsent(element.getFilm_id(),
+        filmsGenresFetch.forEach(element -> result.computeIfAbsent(element.getFilmId(),
                 x -> new ArrayList<>()).add(element.getGenre()));
         return result;
     }
@@ -59,13 +59,13 @@ public class GenreDbStorage {
 
     @Data
     private static class FilmGenre {
-        private Long film_id;
+        private Long filmId;
         private Genre genre;
     }
 
     private FilmGenre mapToFilmGenre(ResultSet resultSet, int rowNum) throws SQLException {
         FilmGenre filmGenre = new FilmGenre();
-        filmGenre.setFilm_id(resultSet.getLong("FILM_ID"));
+        filmGenre.setFilmId(resultSet.getLong("FILM_ID"));
         filmGenre.setGenre(mapToGenre(resultSet, rowNum));
 
         return filmGenre;
