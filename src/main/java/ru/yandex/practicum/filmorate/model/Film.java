@@ -26,6 +26,6 @@ public class Film {
     public Map<String, Object> toMapForDB() {
         return Map.of("name", name, "description", description,
                 "release_date", java.sql.Date.valueOf(releaseDate),
-                "duration", duration, "rating_id", mpa.getId());
+                "duration", duration, "mpa_id", mpa.getId());
     }
 }

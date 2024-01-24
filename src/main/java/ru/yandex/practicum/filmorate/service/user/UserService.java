@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.service.user;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -18,8 +18,7 @@ import java.util.List;
 public class UserService {
     private final UserStorage userStorage;
 
-    public User create(User user) {
-
+    public User addUser(User user) {
         validation(user);
 
         if (user.getName() == null || user.getName().isBlank()) {
@@ -27,39 +26,19 @@ public class UserService {
             log.info("Пользователь без имени, имя = логин");
         }
 
-        return userStorage.addEntity(user);
+        return userStorage.addUser(user);
     }
 
     public User getUserById(Long userId) {
-        final User user = userStorage.getEntityById(userId);
-        if (user == null) {
+        try {
+            return userStorage.getUserById(userId);
+        } catch (EmptyResultDataAccessException e) {
             throw new UserNotFoundException(String.format("Не найден пользователь с id = %s", userId));
         }
-        return user;
     }
 
-    public List<User> getAll() {
-        return userStorage.getAllEntities();
-    }
-
-    public void addFriend(Long userId, Long friendId) {
-        try {
-            userStorage.addFriend(userId, friendId);
-        } catch (DataIntegrityViolationException e) {
-            throw new UserNotFoundException("Не найден id");
-        }
-    }
-
-    public void removeFromFriends(Long user1Id, Long user2Id) {
-        userStorage.removeFromFriends(user1Id, user2Id);
-    }
-
-    public List<User> getAllFriends(Long userId) {
-        return userStorage.getAllFriends(userId);
-    }
-
-    public List<User> getMutualFriends(Long user1Id, Long user2Id) {
-        return userStorage.getMutualFriends(user1Id, user2Id);
+    public List<User> getAllUsers() {
+        return userStorage.getAllUsers();
     }
 
     public User update(User user) {
@@ -70,7 +49,7 @@ public class UserService {
             log.info("Пользователь без имени, имя = логин");
         }
 
-        return userStorage.updateEntity(user);
+        return userStorage.updateUser(user);
     }
 
     protected void validation(User user) {

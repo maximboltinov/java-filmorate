@@ -28,10 +28,10 @@ class UserDbStorageTest {
                 .build();
 
         UserDbStorage userStorage = new UserDbStorage(jdbcTemplate);
-        userStorage.addEntity(newUser);
+        userStorage.addUser(newUser);
 
         // вызываем тестируемый метод
-        User savedUser = userStorage.getEntityById(1L);
+        User savedUser = userStorage.getUserById(1L);
 
         // проверяем утверждения
         assertThat(savedUser).isNotNull() // проверяем, что объект не равен null

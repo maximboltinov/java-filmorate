@@ -16,13 +16,13 @@ public class MpaDbStorage {
 
     public RatingMPA getMpaById(Long mpaId) {
         return jdbcTemplate.queryForObject("SELECT ID MPA_ID, NAME MPA_NAME " +
-                        "FROM RATING_MPA WHERE ID = ?",
+                        "FROM MPA WHERE ID = ?",
                 this::mapToMpa, mpaId);
     }
 
     public List<RatingMPA> getAllMpa() {
         return jdbcTemplate.query("SELECT ID MPA_ID, NAME MPA_NAME " +
-                        "FROM RATING_MPA",
+                        "FROM MPA",
                 this::mapToMpa);
     }
 
