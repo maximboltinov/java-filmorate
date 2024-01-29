@@ -1,98 +1,88 @@
 package ru.yandex.practicum.filmorate.service.film;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.FilmAlreadyExistsException;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.service.genre.GenreService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class FilmService {
     private static final int MAX_NAME_SIZE = 200;
     private static final LocalDate FILM_BIRTHDAY = LocalDate.of(1895, Month.DECEMBER, 28);
     private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+    private final GenreService genreService;
 
-    @Autowired
-    public FilmService(FilmStorage filmStorage,
-                       UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
+    public Film addFilm(Film film) {
+        if (film.getGenres() != null) {
+            film.setGenres(film.getGenres().stream().distinct().collect(Collectors.toList()));
+        }
+        validation(film);
+        Long filmId = filmStorage.addFilm(film);
+        return getFilmById(filmId);
     }
 
-    public void likeIt(Long userId, Long filmId) {
+    public Film updateFilm(Film film) {
+        if (film.getGenres() != null) {
+            film.setGenres(film.getGenres().stream().distinct().collect(Collectors.toList()));
+        }
+        validation(film);
+        int updCount = filmStorage.updateFilm(film);
 
-        if (userStorage.getEntityById(userId) == null) {
-            throw new UserNotFoundException(String.format("Не найден пользователь с id = %s", userId));
+        if (updCount == 0) {
+            throw new FilmNotFoundException(String.format("Не найден фильм с id = %s", film.getId()));
         }
 
-        Film film = filmStorage.getEntityById(filmId);
-        if (film == null) {
-            throw new FilmNotFoundException(String.format("Не найден фильм с id = %s", filmId));
-        }
-
-        film.addLike(userId);
-        filmStorage.updateEntity(film);
-    }
-
-    public void removeLikeIt(Long userId, Long filmId) {
-
-        if (userStorage.getEntityById(userId) == null) {
-            throw new UserNotFoundException(String.format("Не найден пользователь с id = %s", userId));
-        }
-
-        Film film = filmStorage.getEntityById(filmId);
-        if (film == null) {
-            throw new FilmNotFoundException(String.format("Не найден фильм с id = %s", filmId));
-        }
-
-        film.removeLike(userId);
-        filmStorage.updateEntity(film);
-    }
-
-    public List<Film> getPopularFilms(int count) {
-        return filmStorage.getAllEntities().stream()
-                .sorted(Comparator.comparingLong(Film::getLikesCount).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
-    }
-
-    public List<Film> getAll() {
-        return filmStorage.getAllEntities();
+        return getFilmById(film.getId());
     }
 
     public Film getFilmById(Long id) {
-        final Film film = filmStorage.getEntityById(id);
-        if (film == null) {
+        Film film;
+
+        try {
+            film = filmStorage.getFilmById(id);
+        } catch (EmptyResultDataAccessException e) {
             throw new FilmNotFoundException(String.format("Не найден фильм с id = %s", id));
         }
+
+        List<Genre> genres = genreService.getGenresByFilmId(id);
+        film.setGenres(genres);
+
         return film;
     }
 
-    public Film create(Film film) {
-        if (filmStorage.getEntityById(film.getId()) != null) {
-            throw new FilmAlreadyExistsException(String.format("Фильм с id = %s уже существует", film.getId()));
+    public List<Film> getAllFilms() {
+        List<Film> films = filmStorage.getAllFilms();
+        Map<Long, List<Genre>> result = genreService.getGenresForAllFilms();
+
+        for (Film film : films) {
+            film.setGenres(result.get(film.getId()));
+            if (film.getGenres() == null) {
+                film.setGenres(new ArrayList<>());
+            }
         }
-        validation(film);
-        return filmStorage.addEntity(film);
+
+        return films;
     }
 
-    public Film update(Film film) {
-        if (filmStorage.getEntityById(film.getId()) == null) {
-            throw new FilmNotFoundException(String.format("Не найден фильм с id = %s", film.getId()));
-        }
-        validation(film);
-        return filmStorage.updateEntity(film);
+    public List<Film> getPopularFilms(int count) {
+        return getAllFilms().stream()
+                .sorted(Comparator.comparingLong(Film::getRate).reversed())
+                .limit(count)
+                .collect(Collectors.toList());
     }
 
     protected void validation(Film film) {
